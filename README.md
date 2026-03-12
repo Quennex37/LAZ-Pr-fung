@@ -1,4 +1,4 @@
-[Finisch index.html](https://github.com/user-attachments/files/25851941/Finisch.index.html)
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
