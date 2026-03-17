@@ -402,10 +402,14 @@
             let data = snapshot.val() || { name: currentPlayer };
             if(!data.counts) data.counts = {t1:0, t2:0, t3:0};
             if(!data.dates) data.dates = {t1:'', t2:'', t3:''};
+            if(!data.lasts) data.lasts = {t1:0, t2:0, t3:0}; // Neu: Letztes Ergebnis
+            
             data.name = currentPlayer;
             data['t' + currentPart] = Math.max(data['t' + currentPart] || 0, percent);
             data.counts['t' + currentPart] = (data.counts['t' + currentPart] || 0) + 1;
             data.dates['t' + currentPart] = datum;
+            data.lasts['t' + currentPart] = percent; // Aktueller Score als letztes Ergebnis
+
             const div = (currentCategory === 'mannschaft') ? 3 : 2;
             data.total = Math.round(((data.t1 || 0) + (data.t2 || 0) + (data.t3 || 0)) / div);
             userRef.set(data);
@@ -431,7 +435,8 @@
                         const d = (e.dates && e.dates['t'+p]) ? e.dates['t'+p] : '-';
                         const c = (e.counts && e.counts['t'+p]) ? e.counts['t'+p] : 0;
                         const s = e['t'+p] || 0;
-                        html += `<span class="score-info">Teil ${p}: ${s}% (${c} Versuche, am ${d})</span>`;
+                        const last = (e.lasts && e.lasts['t'+p] !== undefined) ? e.lasts['t'+p] : '-';
+                        html += `<span class="score-info">Teil ${p}: Best: ${s}% | Letztes: ${last}% (${c} Versuche, am ${d})</span>`;
                     });
                     html += `<span class="score-bold">Gesamt-Schnitt: ${e.total || 0}%</span></div>`;
                 });
