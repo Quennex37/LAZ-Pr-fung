@@ -1,31 +1,34 @@
 
-
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feuerwehr Quiz - Cloud Leaderboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Feuerwehr Quiz - Mobile</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        body { font-family: sans-serif; line-height: 1.4; padding: 15px; background: #f0f2f5; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; line-height: 1.4; padding: 10px; background: #f0f2f5; margin: 0; }
+        .container { max-width: 100%; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #d32f2f; margin-top: 0; text-align: center; font-size: 1.5em; }
         .progress { font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: bold; }
-        h2 { color: #d32f2f; margin-top: 0; text-align: center; }
         .question-text { font-weight: bold; margin-bottom: 15px; display: block; font-size: 1.1em; white-space: pre-wrap; }
-        .option { display: block; background: #f8f9fa; margin-bottom: 8px; padding: 10px 10px 10px 40px; border-radius: 6px; cursor: pointer; position: relative; border: 1px solid #ddd; }
-        .option input { position: absolute; left: 12px; top: 12px; width: 18px; height: 18px; }
-        .selected { border-color: #d32f2f; background: #fff5f5; }
-        button { background: #d32f2f; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        #feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-weight: bold; }
+        .option { display: block; background: #f8f9fa; margin-bottom: 8px; padding: 12px 10px 12px 45px; border-radius: 8px; cursor: pointer; position: relative; border: 1px solid #ddd; min-height: 45px; }
+        .option input { position: absolute; left: 12px; top: 12px; width: 22px; height: 22px; }
+        button { background: #d32f2f; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .part-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .part-row-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .menu-btn { background: #444; margin-bottom: 0; font-size: 0.9em; padding: 12px 5px; }
+        #feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-weight: bold; text-align: center; }
         .correct { background: #d4edda; color: #155724; }
         .wrong { background: #f8d7da; color: #721c24; }
         #next-btn { background: #28a745; display: none; }
         .leaderboard { margin-top: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        .entry { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 0.85em; }
-        .menu-btn { background: #444; margin-bottom: 10px; }
-        .stats-btn { background: #2c3e50; margin-top: 20px; }
-        hr { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+        .entry { padding: 10px 0; border-bottom: 1px solid #ddd; font-size: 0.85em; }
+        .score-info { color: #555; margin-top: 4px; display: block; font-size: 0.85em; line-height: 1.3; }
+        .score-bold { font-weight: bold; color: #d32f2f; display: block; margin-top: 4px; }
+        .cat-label { font-weight: bold; margin-top: 15px; display: block; color: #333; font-size: 0.9em; }
+        .result-card { text-align: center; padding: 15px; border: 2px solid #d32f2f; border-radius: 10px; background: #fff; }
     </style>
 </head>
 <body>
@@ -33,15 +36,27 @@
 <div class="container">
     <div id="login-area">
         <h2>Feuerwehr Login</h2>
-        <input type="text" id="user-name" placeholder="Dein Name..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #ccc;">
-    </div>
-
-    <div id="menu">
-        <button class="menu-btn" onclick="preStart('mannschaft')">1. Mannschafts-Quiz</button>
-        <button class="menu-btn" onclick="preStart('maschinist')">2. Maschinisten-Quiz</button>
-        <button class="menu-btn" onclick="preStart('gruppenfuehrer')">3. Gruppenführer-Quiz</button>
-        <hr>
-        <button class="stats-btn" onclick="showGlobalLeaderboard()">🏆 Bestenliste ansehen</button>
+        <input type="text" id="user-name" placeholder="Dein Name..." style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 16px;">
+        <div id="menu">
+            <span class="cat-label">1. MANNSCHAFT (90 FRAGEN)</span>
+            <div class="part-row-tri">
+                <button class="menu-btn" onclick="preStart('mannschaft', 1)">Teil 1</button>
+                <button class="menu-btn" onclick="preStart('mannschaft', 2)">Teil 2</button>
+                <button class="menu-btn" onclick="preStart('mannschaft', 3)">Teil 3</button>
+            </div>
+            <span class="cat-label">2. MASCHINIST (60 FRAGEN)</span>
+            <div class="part-row">
+                <button class="menu-btn" onclick="preStart('maschinist', 1)">Teil 1</button>
+                <button class="menu-btn" onclick="preStart('maschinist', 2)">Teil 2</button>
+            </div>
+            <span class="cat-label">3. GRUPPENFÜHRER (60 FRAGEN)</span>
+            <div class="part-row">
+                <button class="menu-btn" onclick="preStart('gruppenfuehrer', 1)">Teil 1</button>
+                <button class="menu-btn" onclick="preStart('gruppenfuehrer', 2)">Teil 2</button>
+            </div>
+            <hr style="border:0; border-top:1px solid #ddd; margin: 20px 0;">
+            <button style="background: #2c3e50;" onclick="showGlobalLeaderboard()">🏆 Bestenliste ansehen</button>
+        </div>
     </div>
 
     <div id="quiz-area" style="display:none;">
@@ -53,7 +68,7 @@
             <div id="feedback"></div>
             <button id="next-btn" onclick="nextQuestion()">Nächste Frage</button>
         </div>
-        <button style="background:#666; margin-top:30px;" onclick="location.reload()">Abbrechen / Menü</button>
+        <button id="abort-btn" style="background:#666; margin-top:30px;" onclick="location.reload()">Abbrechen / Menü</button>
     </div>
 
     <div id="leaderboard-view" style="display:none;">
@@ -64,7 +79,6 @@
 </div>
 
 <script>
-    // ### DEINE FIREBASE DATEN ###
     const firebaseConfig = {
         apiKey: "AIzaSyCs_FBU4LD6SWrNqgTEJgYV_RpP5R_W0IE",
         databaseURL: "https://las-gold-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -72,22 +86,17 @@
         projectId: "las-gold",
         storageBucket: "las-gold.firebasestorage.app",
         messagingSenderId: "509397755975",
-        appId: "1:509397755975:web:9c337b7b5cf6d2a36e2962",
-        measurementId: "G-685GG1V6W7"
+        appId: "1:509397755975:web:9c337b7b5cf6d2a36e2962"
     };
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let deviceID = localStorage.getItem("quiz_device_id");
-    if (!deviceID) {
-        deviceID = 'dev_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem("quiz_device_id", deviceID);
-    }
+    let deviceID = localStorage.getItem("quiz_device_id") || 'dev_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("quiz_device_id", deviceID);
 
     const catalogs = {
-        mannschaft: [
-           { id: 1, q: " Wer ist nach dem Feuerwehrgesetz Baden-Württemberg für die Aufstellung, Ausrüstung und Unterhaltung der Feuerwehr verantwortlich?", o: {a: "Bund", b: "Land", c: "Kreis", d: "Gemeinde", e: "Kommandant"}, a: ["d"] },
+        mannschaft: [{ id: 1, q: " Wer ist nach dem Feuerwehrgesetz Baden-Württemberg für die Aufstellung, Ausrüstung und Unterhaltung der Feuerwehr verantwortlich?", o: {a: "Bund", b: "Land", c: "Kreis", d: "Gemeinde", e: "Kommandant"}, a: ["d"] },
         { id: 2, q: " Welches sind Rechtsgrundlagen der Feuerwehr?", o: {a: "Bürgerliches Gesetzbuch", b: "Feuerwehrgesetz Baden-Württemberg", c: "Feuerwehrsatzung der Gemeinde", d: "Landesverfassung Baden-Württemberg"}, a: ["b", "c"] },
         { id: 3, q: " Welche der nachfolgenden Aufgaben gehören nicht zu den Pflichtaufgaben der Feuerwehr?", o: {a: "Bekämpfung von Schadenfeuer", b: "Rettung von Menschen aus lebensbedrohlichen Lagen", c: "Feuersicherheitsdienst", d: "Hilfeleistung für Schiffe"}, a: ["c", "d"] },
         { id: 4, q: " Was gehört zu den Dienstpflichten eines ehrenamtlich tätigen Angehörigen der Gemeindefeuerwehr?", o: {a: "Am Dienst einschließlich Aus- und Fortbildung regelmäßig und pünktlich teilnehmen", b: "Den dienstlichen Weisungen des Vorgesetzten nachkommen", c: "Bei Alarm unverzüglich zum Gerätehaus kommen", d: "Die Feuerwehrdienst- und Unfallverhütungsvorschriften beachten", e: "Die persönliche Ausrüstung pfleglich behandeln"}, a: ["a", "b", "c", "d", "e"] },
@@ -238,7 +247,7 @@
         { id: 58, q: " Wie kann sich der Maschinist helfen, wenn die Entlüftungseinrichtung der Feuerlöschkreisel- pumpe ausgefallen ist?", o: {a: "Bei Tanklöschfahrzeugen Feuerlöschkreiselpumpe und Saugleitung aus dem eingebauten Löschwasserbehälter füllen", b: "Gruppenführer benachrichtigen, damit eine Feuerlöschkreiselpumpe nachgefordert wird", c: "Pumpe und Saugleitung „von Hand“ auffüllen"}, a: ["a", "b", "c"] },
         { id: 59, q: " Worauf hat der Maschinist im Winter bei einer Flüssigkeitsring-Entlüftungseinrichtung zu ach- ten?", o: {a: "Dass die Feuerlöschkreiselpumpe nur im beheizten Feuerwehrhaus abgestellt wird", b: "Dass die Feuerlöschkreiselpumpe samt Entlüftungseinrichtung nach jedem Einsatz und jeder Übung entleert wird", c: "Dass die Entlüftungseinrichtung mit Frostschutzmittel aufgefüllt wird"}, a: ["b", "c"] },
         { id: 60, q: " Wer ist bei einer Einsatzfahrt für das Feuerwehrfahrzeug verantwortlich?", o: {a: "Der Maschinist als Fahrer des Feuerwehrfahrzeuges", b: "Der Gruppenführer", c: "Der Zugführer"}, a: ["a"] }
-       ],
+     ],
         gruppenfuehrer: [{ id: 1, q: " Welche Aussagen sind richtig?", o: {a: "Die Feuerwehr ist eine gemeinnützige, der Nächstenhilfe dienende Einrichtung", b: "Die Feuerwehr ist ein gemeinnütziger Verein", c: "Die Feuerwehr ist ein Verein, ohne eigene Rechtspersönlichkeit", d: "Die Feuerwehr ist eine Einrichtung der Gemeinde"}, a: ["a", "d"] },
         { id: 2, q: " Welche Grundrechte können zur Erfüllung der Aufgaben der Feuerwehr nach § 2 des Feuer-\nwehrgesetzes (FwG) Baden-Württemberg eingeschränkt werden?", o: {a: "Freiheit der Person", b: "Meinungsfreiheit / Pressefreiheit", c: "Gleichheit vor dem Gesetz", d: "Versammlungsfreiheit", e: "Unverletzlichkeit der Wohnung", f: "Recht auf Eigentum"}, a: ["a", "e", "f"] },
         { id: 3, q: " Welche Aufgabe hat der Feuerwehrausschuss (Abteilungsausschuss) entsprechend dem Feu-\nerwehrgesetz (FwG) Baden-Württemberg und in welchen Zeitabständen ist er zu wählen?", o: {a: "Jahresabschlussübung vorbereiten", b: "Beratung des Kommandanten", c: "Beschaffung von Feuerwehrfahrzeugen", d: "Feuerwehrangehörige bei fortgesetzter Nachlässigkeit im Dienst entlassen", e: "Kommandant unterstützen", f: "Feuerwehrsatzung erstellen", g: "Drei Jahre", h: "Fünf Jahre"}, a: ["b", "e", "h"] },
@@ -302,43 +311,47 @@
         ]
     };
 
-    let currentQuestions = [];
-    let currentIndex = 0;
-    let score = 0;
-    let currentPlayer = "";
-    let currentCategory = "";
+    let currentQuestions = [], currentIndex = 0, score = 0, currentPlayer = "", currentCategory = "", currentPart = 0;
 
-    function preStart(key) {
+    function preStart(key, part) {
         const nameInput = document.getElementById("user-name").value.trim();
         if (nameInput === "") { alert("Bitte gib zuerst deinen Namen ein!"); return; }
         currentPlayer = nameInput;
         currentCategory = key;
-        startQuiz(key);
-    }
+        currentPart = part;
 
-    function startQuiz(key) {
-        if (catalogs[key].length === 0) { alert("Dieses Quiz hat noch keine Fragen."); return; }
-        currentQuestions = [...catalogs[key]].sort(() => Math.random() - 0.5);
-        currentIndex = 0;
-        score = 0;
+        let startIdx, endIdx;
+        if (key === 'gruppenfuehrer') {
+            startIdx = (part === 1) ? 0 : 30;
+            endIdx = (part === 1) ? 30 : 60;
+        } else {
+            const totalQuestions = catalogs[key].length;
+            const partsCount = (key === 'mannschaft' ? 3 : 2);
+            const perPart = Math.ceil(totalQuestions / partsCount);
+            startIdx = (part - 1) * perPart;
+            endIdx = startIdx + perPart;
+        }
+
+        currentQuestions = catalogs[key].slice(startIdx, endIdx).sort(() => Math.random() - 0.5);
+        currentIndex = 0; score = 0;
         document.getElementById("login-area").style.display = "none";
-        document.getElementById("menu").style.display = "none";
         document.getElementById("quiz-area").style.display = "block";
         showQuestion();
     }
 
     function showQuestion() {
         const q = currentQuestions[currentIndex];
-        document.getElementById("progress").innerText = `Kategorie: ${currentCategory.toUpperCase()} | Frage ${currentIndex+1}/${currentQuestions.length}`;
+        document.getElementById("progress").innerText = `Frage ${currentIndex+1}/${currentQuestions.length}`;
         document.getElementById("question-display").innerText = q.q;
         let html = "";
         for (let k in q.o) {
-            html += `<label class="option" id="l-${k}"><input type="checkbox" name="ans" value="${k}" onchange="this.parentElement.classList.toggle('selected')">${k.toUpperCase()}: ${q.o[k]}</label>`;
+            html += `<label class="option"><input type="checkbox" name="ans" value="${k}">${k.toUpperCase()}: ${q.o[k]}</label>`;
         }
         document.getElementById("options-display").innerHTML = html;
         document.getElementById("feedback").style.display = "none";
         document.getElementById("check-btn").style.display = "block";
         document.getElementById("next-btn").style.display = "none";
+        window.scrollTo(0,0);
     }
 
     function checkAnswer() {
@@ -360,73 +373,70 @@
     }
 
     function finishQuiz() {
-        const percent = Math.round((score / currentQuestions.length) * 100);
+        const total = currentQuestions.length;
+        const wrong = total - score;
+        const percent = Math.round((score / total) * 100);
+        const datum = new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+        
+        document.getElementById("progress").style.display = "none";
+        document.getElementById("abort-btn").style.display = "none";
+        const quizBox = document.getElementById("quiz-box");
+        quizBox.innerHTML = `
+            <div class="result-card">
+                <h3 style="color: #d32f2f;">Ergebnis: Teil ${currentPart}</h3>
+                <p style="font-size: 1.2em; margin: 10px 0;">
+                    ✅ Richtig: <b>${score}</b><br>
+                    ❌ Falsch: <b>${wrong}</b>
+                </p>
+                <div style="font-size: 2.5em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'}; margin: 15px 0;">
+                    ${percent}%
+                </div>
+                <p style="color: #666; font-size: 0.9em;">Dein Ergebnis wurde gespeichert.</p>
+                <button onclick="showGlobalLeaderboard()">Zur Bestenliste</button>
+                <button style="background:#666; margin-top:10px;" onclick="location.reload()">Zum Hauptmenü</button>
+            </div>
+        `;
+
         const userRef = database.ref('leaderboard/' + deviceID + '/' + currentCategory);
-
         userRef.once('value', (snapshot) => {
-            let oldData = snapshot.val();
-            let attempts = 1;
-            let bestPercent = percent;
-
-            if (oldData) {
-                attempts = (oldData.attempts || 0) + 1;
-                bestPercent = Math.max(oldData.percent || 0, percent);
-            }
-
-            userRef.set({
-                name: currentPlayer,
-                percent: bestPercent,
-                attempts: attempts,
-                lastUpdate: new Date().toLocaleString()
-            }).then(() => {
-                showGlobalLeaderboard();
-            });
+            let data = snapshot.val() || { name: currentPlayer };
+            if(!data.counts) data.counts = {t1:0, t2:0, t3:0};
+            if(!data.dates) data.dates = {t1:'', t2:'', t3:''};
+            data.name = currentPlayer;
+            data['t' + currentPart] = Math.max(data['t' + currentPart] || 0, percent);
+            data.counts['t' + currentPart] = (data.counts['t' + currentPart] || 0) + 1;
+            data.dates['t' + currentPart] = datum;
+            const div = (currentCategory === 'mannschaft') ? 3 : 2;
+            data.total = Math.round(((data.t1 || 0) + (data.t2 || 0) + (data.t3 || 0)) / div);
+            userRef.set(data);
         });
     }
 
     function showGlobalLeaderboard() {
         document.getElementById("login-area").style.display = "none";
-        document.getElementById("menu").style.display = "none";
         document.getElementById("quiz-area").style.display = "none";
         document.getElementById("leaderboard-view").style.display = "block";
-
         database.ref('leaderboard').once('value', (snapshot) => {
             const allData = snapshot.val();
             let html = "";
-            const categories = ['mannschaft', 'maschinist', 'gruppenfuehrer'];
-            
-            categories.forEach(cat => {
+            ['mannschaft', 'maschinist', 'gruppenfuehrer'].forEach(cat => {
                 html += `<div class="leaderboard"><h3>🚒 ${cat.toUpperCase()}</h3>`;
                 let entries = [];
-                
-                for (let userDevId in allData) {
-                    if (allData[userDevId] && allData[userDevId][cat]) {
-                        entries.push(allData[userDevId][cat]);
-                    }
-                }
-                
-                entries.sort((a, b) => b.percent - a.percent);
-                
-                if (entries.length === 0) {
-                    html += `<div class="entry">Noch keine Ergebnisse</div>`;
-                } else {
-                    entries.forEach((e, index) => {
-                        let versuchText = e.attempts === 1 ? "1 Versuch" : e.attempts + " Versuche";
-                        html += `
-                            <div class="entry" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid #ddd; padding: 8px 0;">
-                                <div style="display: flex; justify-content: space-between; width: 100%;">
-                                    <span>${index+1}. <b>${e.name}</b></span>
-                                    <span style="color: #d32f2f; font-weight: bold;">${e.percent}%</span>
-                                </div>
-                                <div style="font-size: 0.75em; color: #666;">
-                                    Gesamt: ${versuchText} | Stand: ${e.lastUpdate || ''}
-                                </div>
-                            </div>`;
+                for (let id in allData) { if (allData[id][cat]) entries.push(allData[id][cat]); }
+                entries.sort((a, b) => b.total - a.total);
+                entries.forEach((e, i) => {
+                    html += `<div class="entry"><b>${i+1}. ${e.name}</b><br>`;
+                    [1, 2, 3].forEach(p => {
+                        if(cat !== 'mannschaft' && p === 3) return;
+                        const d = (e.dates && e.dates['t'+p]) ? e.dates['t'+p] : '-';
+                        const c = (e.counts && e.counts['t'+p]) ? e.counts['t'+p] : 0;
+                        const s = e['t'+p] || 0;
+                        html += `<span class="score-info">Teil ${p}: ${s}% (${c} Versuche, am ${d})</span>`;
                     });
-                }
+                    html += `<span class="score-bold">Gesamt-Schnitt: ${e.total || 0}%</span></div>`;
+                });
                 html += `</div>`;
             });
-            
             document.getElementById("leaderboard-list").innerHTML = html;
         });
     }
