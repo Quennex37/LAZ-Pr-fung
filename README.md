@@ -3,59 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Feuerwehr Quiz - Mobile</title>
+    <title>Feuerwehr Quiz Mobile</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: sans-serif; line-height: 1.4; padding: 10px; background: #f0f2f5; margin: 0; }
-        .container { max-width: 100%; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #d32f2f; margin-top: 0; text-align: center; font-size: 1.5em; }
-        .progress { font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: bold; }
-        .question-text { font-weight: bold; margin-bottom: 15px; display: block; font-size: 1.1em; white-space: pre-wrap; }
-        .option { display: block; background: #f8f9fa; margin-bottom: 8px; padding: 12px 10px 12px 45px; border-radius: 8px; cursor: pointer; position: relative; border: 1px solid #ddd; min-height: 45px; }
-        .option input { position: absolute; left: 12px; top: 12px; width: 22px; height: 22px; }
-        button { background: #d32f2f; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .part-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .part-row-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
-        .menu-btn { background: #444; margin-bottom: 0; font-size: 0.9em; padding: 12px 5px; }
-        #feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-weight: bold; text-align: center; }
-        .correct { background: #d4edda; color: #155724; }
-        .wrong { background: #f8d7da; color: #721c24; }
-        #next-btn { background: #28a745; display: none; }
-        .leaderboard { margin-top: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        .entry { padding: 10px 0; border-bottom: 1px solid #ddd; font-size: 0.85em; }
-        .score-info { color: #555; margin-top: 4px; display: block; font-size: 0.85em; line-height: 1.3; }
-        .score-bold { font-weight: bold; color: #d32f2f; display: block; margin-top: 4px; }
-        .cat-label { font-weight: bold; margin-top: 15px; display: block; color: #333; font-size: 0.9em; }
-        .result-card { text-align: center; padding: 15px; border: 2px solid #d32f2f; border-radius: 10px; background: #fff; }
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #ddd;
+            --btn-secondary: #444;
+        }
+
+        body.dark-mode {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #f0f0f0;
+            --border-color: #444;
+            --btn-secondary: #555;
+        }
+
+        * { box-sizing: border-box; transition: background 0.3s; }
+        
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            line-height: 1.4; 
+            padding: 10px; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; 
+        }
+        
+        .container { 
+            width: 100%;
+            max-width: 500px; 
+            margin: auto; 
+            background: var(--card-bg); 
+            padding: 15px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        }
+        
+        h2 { color: #d32f2f; margin-top: 0; text-align: center; font-size: 1.4em; }
+        .progress { font-size: 0.85em; color: #777; margin-bottom: 10px; font-weight: bold; text-align: center; }
+        
+        .question-text { font-weight: bold; margin-bottom: 15px; display: block; font-size: 1.1em; line-height: 1.3; }
+        
+        .option { 
+            display: block; 
+            background: var(--bg-color); 
+            margin-bottom: 10px; 
+            padding: 15px 10px 15px 45px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            position: relative; 
+            border: 1px solid var(--border-color); 
+            min-height: 50px; 
+            font-size: 0.95em; 
+            word-wrap: break-word;
+        }
+        
+        .option input { position: absolute; left: 12px; top: 14px; width: 22px; height: 22px; }
+        
+        button { background: #d32f2f; color: white; border: none; padding: 16px; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        
+        .part-row-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .part-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        
+        .menu-btn { background: var(--btn-secondary); font-size: 0.85em; padding: 12px 2px; }
+        .exam-btn { background: #e67e22 !important; margin-top: 2px; margin-bottom: 12px; }
+        
+        #feedback { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; text-align: center; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .wrong { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .leaderboard { margin-top: 15px; background: var(--bg-color); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .entry { padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85em; }
+        .score-info { color: #888; display: block; font-size: 0.78em; margin-top: 3px; line-height: 1.3; }
+        .score-bold { font-weight: bold; color: #d32f2f; display: block; margin-top: 5px; font-size: 1em; }
+        
+        .cat-label { font-weight: bold; margin-top: 12px; display: block; color: #d32f2f; font-size: 0.85em; text-transform: uppercase; }
+        .hidden { display: none !important; }
+        .logout-btn { background: transparent; color: #888; font-size: 0.8em; text-decoration: underline; margin-top: 20px; padding: 5px; }
+        .dark-mode-toggle { width: auto; padding: 6px 12px; font-size: 0.75em; background: #555; position: absolute; right: 15px; top: 15px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="login-area">
-        <h2>Feuerwehr Login</h2>
-        <input type="text" id="user-name" placeholder="Dein Name..." style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box; font-size: 16px;">
+<div class="container" style="position: relative;">
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌓 Design</button>
+
+    <div id="password-area">
+        <h2 style="margin-top: 25px;">Feuerwehr Zugang</h2>
+        <input type="password" id="pw-input" placeholder="Passwort..." style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size: 16px;">
+        <button onclick="checkPassword()">Anmelden</button>
+    </div>
+
+    <div id="login-area" class="hidden">
+        <h2 id="portal-title" style="margin-top: 25px;">Hauptmenü</h2>
+        <input type="text" id="user-name" placeholder="Dein Vorname..." style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size: 16px;">
+        
         <div id="menu">
-            <span class="cat-label">1. MANNSCHAFT (90 FRAGEN)</span>
+            <span class="cat-label">Mannschaft (90 Fragen)</span>
             <div class="part-row-tri">
                 <button class="menu-btn" onclick="preStart('mannschaft', 1)">Teil 1</button>
                 <button class="menu-btn" onclick="preStart('mannschaft', 2)">Teil 2</button>
                 <button class="menu-btn" onclick="preStart('mannschaft', 3)">Teil 3</button>
             </div>
-            <span class="cat-label">2. MASCHINIST (60 FRAGEN)</span>
+            <button class="exam-btn" onclick="preStart('mannschaft', 'exam')">⏱ Prüfungssimulation (30 Fr.)</button>
+
+            <span class="cat-label">Maschinist (60 Fragen)</span>
             <div class="part-row">
                 <button class="menu-btn" onclick="preStart('maschinist', 1)">Teil 1</button>
                 <button class="menu-btn" onclick="preStart('maschinist', 2)">Teil 2</button>
             </div>
-            <span class="cat-label">3. GRUPPENFÜHRER (60 FRAGEN)</span>
+            <button class="exam-btn" onclick="preStart('maschinist', 'exam')">⏱ Prüfungssimulation (30 Fr.)</button>
+
+            <span class="cat-label">Gruppenführer (60 Fragen)</span>
             <div class="part-row">
                 <button class="menu-btn" onclick="preStart('gruppenfuehrer', 1)">Teil 1</button>
                 <button class="menu-btn" onclick="preStart('gruppenfuehrer', 2)">Teil 2</button>
             </div>
+            <button class="exam-btn" onclick="preStart('gruppenfuehrer', 'exam')">⏱ Prüfungssimulation (30 Fr.)</button>
+
             <hr style="border:0; border-top:1px solid #ddd; margin: 20px 0;">
             <button style="background: #2c3e50;" onclick="showGlobalLeaderboard()">🏆 Bestenliste ansehen</button>
+            <button class="logout-btn" onclick="logout()">Abmelden & Passwort-Login</button>
         </div>
     </div>
 
@@ -68,13 +141,13 @@
             <div id="feedback"></div>
             <button id="next-btn" onclick="nextQuestion()">Nächste Frage</button>
         </div>
-        <button id="abort-btn" style="background:#666; margin-top:30px;" onclick="location.reload()">Abbrechen / Menü</button>
+        <button id="abort-btn" style="background:#666; margin-top:30px;" onclick="confirmAbort()">Abbrechen / Hauptmenü</button>
     </div>
 
     <div id="leaderboard-view" style="display:none;">
-        <h2>🏆 Gesamt-Bestenliste</h2>
-        <div id="leaderboard-list">Lade Daten...</div>
-        <button style="background:#444;" onclick="location.reload()">Zurück zum Menü</button>
+        <h2 id="leaderboard-title">🏆 Bestenliste</h2>
+        <div id="leaderboard-list">Lade Ranking...</div>
+        <button style="background:#444; margin-top: 20px;" onclick="backToMenu()">Zurück zum Hauptmenü</button>
     </div>
 </div>
 
@@ -82,19 +155,15 @@
     const firebaseConfig = {
         apiKey: "AIzaSyCs_FBU4LD6SWrNqgTEJgYV_RpP5R_W0IE",
         databaseURL: "https://las-gold-default-rtdb.europe-west1.firebasedatabase.app/",
-        authDomain: "las-gold.firebaseapp.com",
-        projectId: "las-gold",
-        storageBucket: "las-gold.firebasestorage.app",
-        messagingSenderId: "509397755975",
-        appId: "1:509397755975:web:9c337b7b5cf6d2a36e2962"
+        projectId: "las-gold"
     };
-
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let deviceID = localStorage.getItem("quiz_device_id") || 'dev_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("quiz_device_id", deviceID);
+    const PW_HEDDESHEIM = "68542";
+    const PW_SCHRIESHEIM = "06220";
 
+    // --- FRAGEN KATALOG (HIER EINTRAGEN) ---
     const catalogs = {
         mannschaft: [{ id: 1, q: " Wer ist nach dem Feuerwehrgesetz Baden-Württemberg für die Aufstellung, Ausrüstung und Unterhaltung der Feuerwehr verantwortlich?", o: {a: "Bund", b: "Land", c: "Kreis", d: "Gemeinde", e: "Kommandant"}, a: ["d"] },
         { id: 2, q: " Welches sind Rechtsgrundlagen der Feuerwehr?", o: {a: "Bürgerliches Gesetzbuch", b: "Feuerwehrgesetz Baden-Württemberg", c: "Feuerwehrsatzung der Gemeinde", d: "Landesverfassung Baden-Württemberg"}, a: ["b", "c"] },
@@ -311,28 +380,54 @@
         ]
     };
 
-    let currentQuestions = [], currentIndex = 0, score = 0, currentPlayer = "", currentCategory = "", currentPart = 0;
+    let deviceID = localStorage.getItem("quiz_device_id") || 'dev_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("quiz_device_id", deviceID);
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+    if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+
+    window.onload = () => { if(localStorage.getItem('active_pw')) applyAccess(localStorage.getItem('active_pw')); };
+
+    function checkPassword() {
+        const input = document.getElementById('pw-input').value;
+        if (input === PW_HEDDESHEIM || input === PW_SCHRIESHEIM) {
+            localStorage.setItem('active_pw', input);
+            applyAccess(input);
+        } else alert("Falsches Passwort!");
+    }
+
+    function applyAccess(pw) {
+        document.getElementById('password-area').classList.add('hidden');
+        document.getElementById('login-area').classList.remove('hidden');
+        document.getElementById('portal-title').innerText = "Feuerwehr " + (pw === PW_HEDDESHEIM ? "Heddesheim" : "Schriesheim") + " - Hauptmenü";
+    }
+
+    function logout() {
+        if (confirm("Abmelden? Du musst danach das Passwort neu eingeben.")) {
+            localStorage.removeItem('active_pw');
+            location.reload();
+        }
+    }
+
+    let currentQuestions = [], currentIndex = 0, score = 0, currentPlayer = "", currentCategory = "", currentPart = "";
 
     function preStart(key, part) {
         const nameInput = document.getElementById("user-name").value.trim();
-        if (nameInput === "") { alert("Bitte gib zuerst deinen Namen ein!"); return; }
+        if (!nameInput) { alert("Bitte gib deinen Namen ein!"); return; }
         currentPlayer = nameInput;
         currentCategory = key;
         currentPart = part;
 
-        let startIdx, endIdx;
-        if (key === 'gruppenfuehrer') {
-            startIdx = (part === 1) ? 0 : 30;
-            endIdx = (part === 1) ? 30 : 60;
+        if (part === 'exam') {
+            currentQuestions = [...catalogs[key]].sort(() => 0.5 - Math.random()).slice(0, 30);
         } else {
-            const totalQuestions = catalogs[key].length;
-            const partsCount = (key === 'mannschaft' ? 3 : 2);
-            const perPart = Math.ceil(totalQuestions / partsCount);
-            startIdx = (part - 1) * perPart;
-            endIdx = startIdx + perPart;
+            const startIdx = (part - 1) * 30;
+            currentQuestions = catalogs[key].slice(startIdx, startIdx + 30);
         }
 
-        currentQuestions = catalogs[key].slice(startIdx, endIdx).sort(() => Math.random() - 0.5);
         currentIndex = 0; score = 0;
         document.getElementById("login-area").style.display = "none";
         document.getElementById("quiz-area").style.display = "block";
@@ -341,7 +436,7 @@
 
     function showQuestion() {
         const q = currentQuestions[currentIndex];
-        document.getElementById("progress").innerText = `Frage ${currentIndex+1}/${currentQuestions.length}`;
+        document.getElementById("progress").innerText = `FRAGE ${currentIndex+1} VON ${currentQuestions.length}`;
         document.getElementById("question-display").innerText = q.q;
         let html = "";
         for (let k in q.o) {
@@ -361,7 +456,7 @@
         const fb = document.getElementById("feedback");
         fb.style.display = "block";
         if (isCorrect) { score++; fb.innerText = "RICHTIG!"; fb.className = "correct"; }
-        else { fb.innerText = "FALSCH! Richtig: " + q.a.join(",").toUpperCase(); fb.className = "wrong"; }
+        else { fb.innerText = "FALSCH! Lösung: " + q.a.join(",").toUpperCase(); fb.className = "wrong"; }
         document.getElementById("check-btn").style.display = "none";
         document.getElementById("next-btn").style.display = "block";
     }
@@ -374,42 +469,34 @@
 
     function finishQuiz() {
         const total = currentQuestions.length;
-        const wrong = total - score;
         const percent = Math.round((score / total) * 100);
-        const datum = new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-        
+        const datum = new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const activePw = localStorage.getItem('active_pw');
+
         document.getElementById("progress").style.display = "none";
-        document.getElementById("abort-btn").style.display = "none";
-        const quizBox = document.getElementById("quiz-box");
-        quizBox.innerHTML = `
-            <div class="result-card">
-                <h3 style="color: #d32f2f;">Ergebnis: Teil ${currentPart}</h3>
-                <p style="font-size: 1.2em; margin: 10px 0;">
-                    ✅ Richtig: <b>${score}</b><br>
-                    ❌ Falsch: <b>${wrong}</b>
-                </p>
-                <div style="font-size: 2.5em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'}; margin: 15px 0;">
-                    ${percent}%
-                </div>
-                <p style="color: #666; font-size: 0.9em;">Dein Ergebnis wurde gespeichert.</p>
-                <button onclick="showGlobalLeaderboard()">Zur Bestenliste</button>
-                <button style="background:#666; margin-top:10px;" onclick="location.reload()">Zum Hauptmenü</button>
+        document.getElementById("quiz-box").innerHTML = `
+            <div style="text-align:center;">
+                <h3>Ergebnis: ${currentPart === 'exam' ? 'Prüfung' : 'Teil ' + currentPart}</h3>
+                <p>Richtig: ${score} | Falsch: ${total - score}</p>
+                <div style="font-size: 3em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'}; margin: 15px 0;">${percent}%</div>
+                <button onclick="showGlobalLeaderboard()">Bestenliste</button>
+                <button style="background:#666; margin-top:10px;" onclick="location.reload()">Hauptmenü</button>
             </div>
         `;
 
-        const userRef = database.ref('leaderboard/' + deviceID + '/' + currentCategory);
+        const userRef = database.ref(`leaderboard/${deviceID}/${currentCategory}`);
         userRef.once('value', (snapshot) => {
-            let data = snapshot.val() || { name: currentPlayer };
-            if(!data.counts) data.counts = {t1:0, t2:0, t3:0};
-            if(!data.dates) data.dates = {t1:'', t2:'', t3:''};
-            if(!data.lasts) data.lasts = {t1:0, t2:0, t3:0}; // Neu: Letztes Ergebnis
+            let data = snapshot.val() || { name: currentPlayer, room: activePw };
+            if(!data.counts) data.counts = {t1:0, t2:0, t3:0, exam:0};
+            if(!data.dates) data.dates = {t1:'', t2:'', t3:'', exam:''};
+            if(!data.lasts) data.lasts = {t1:0, t2:0, t3:0, exam:0}; 
             
-            data.name = currentPlayer;
-            data['t' + currentPart] = Math.max(data['t' + currentPart] || 0, percent);
-            data.counts['t' + currentPart] = (data.counts['t' + currentPart] || 0) + 1;
-            data.dates['t' + currentPart] = datum;
-            data.lasts['t' + currentPart] = percent; // Aktueller Score als letztes Ergebnis
-
+            const key = currentPart === 'exam' ? 'exam' : 't' + currentPart;
+            data[key] = Math.max(data[key] || 0, percent);
+            data.counts[key] = (data.counts[key] || 0) + 1;
+            data.dates[key] = datum;
+            data.lasts[key] = percent;
+            
             const div = (currentCategory === 'mannschaft') ? 3 : 2;
             data.total = Math.round(((data.t1 || 0) + (data.t2 || 0) + (data.t3 || 0)) / div);
             userRef.set(data);
@@ -417,27 +504,34 @@
     }
 
     function showGlobalLeaderboard() {
+        const activePw = localStorage.getItem('active_pw');
         document.getElementById("login-area").style.display = "none";
         document.getElementById("quiz-area").style.display = "none";
         document.getElementById("leaderboard-view").style.display = "block";
+        
         database.ref('leaderboard').once('value', (snapshot) => {
             const allData = snapshot.val();
             let html = "";
             ['mannschaft', 'maschinist', 'gruppenfuehrer'].forEach(cat => {
                 html += `<div class="leaderboard"><h3>🚒 ${cat.toUpperCase()}</h3>`;
                 let entries = [];
-                for (let id in allData) { if (allData[id][cat]) entries.push(allData[id][cat]); }
-                entries.sort((a, b) => b.total - a.total);
-                entries.forEach((e, i) => {
+                for (let id in allData) { 
+                    if (allData[id][cat] && allData[id][cat].room === activePw) entries.push(allData[id][cat]);
+                }
+                entries.sort((a, b) => b.total - a.total).forEach((e, i) => {
                     html += `<div class="entry"><b>${i+1}. ${e.name}</b><br>`;
                     [1, 2, 3].forEach(p => {
                         if(cat !== 'mannschaft' && p === 3) return;
-                        const d = (e.dates && e.dates['t'+p]) ? e.dates['t'+p] : '-';
-                        const c = (e.counts && e.counts['t'+p]) ? e.counts['t'+p] : 0;
                         const s = e['t'+p] || 0;
                         const last = (e.lasts && e.lasts['t'+p] !== undefined) ? e.lasts['t'+p] : '-';
-                        html += `<span class="score-info">Teil ${p}: Best: ${s}% | Letztes: ${last}% (${c} Versuche, am ${d})</span>`;
+                        const c = (e.counts && e.counts['t'+p]) ? e.counts['t'+p] : 0;
+                        const d = (e.dates && e.dates['t'+p]) ? e.dates['t'+p] : '-';
+                        html += `<span class="score-info">Teil ${p}: 🏆 ${s}% | Letztes: ${last}% | Versuche: ${c} (am ${d})</span>`;
                     });
+                    const examBest = e.exam || 0;
+                    const examLast = e.lasts && e.lasts.exam !== undefined ? e.lasts.exam : '-';
+                    const examCount = (e.counts && e.counts.exam) ? e.counts.exam : 0;
+                    html += `<span class="score-info" style="color:#e67e22; font-weight:bold;">Prüfung: Best: ${examBest}% | Letzte: ${examLast}% (${examCount}x)</span>`;
                     html += `<span class="score-bold">Gesamt-Schnitt: ${e.total || 0}%</span></div>`;
                 });
                 html += `</div>`;
@@ -445,6 +539,9 @@
             document.getElementById("leaderboard-list").innerHTML = html;
         });
     }
+
+    function backToMenu() { document.getElementById("leaderboard-view").style.display = "none"; document.getElementById("login-area").style.display = "block"; }
+    function confirmAbort() { if (confirm("Quiz abbrechen?")) location.reload(); }
 </script>
 </body>
 </html>
