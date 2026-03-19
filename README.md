@@ -163,7 +163,6 @@
     const PW_HEDDESHEIM = "68542";
     const PW_SCHRIESHEIM = "06220";
 
-    // --- FRAGEN KATALOG (HIER EINTRAGEN) ---
     const catalogs = {
         mannschaft: [{ id: 1, q: " Wer ist nach dem Feuerwehrgesetz Baden-Württemberg für die Aufstellung, Ausrüstung und Unterhaltung der Feuerwehr verantwortlich?", o: {a: "Bund", b: "Land", c: "Kreis", d: "Gemeinde", e: "Kommandant"}, a: ["d"] },
         { id: 2, q: " Welches sind Rechtsgrundlagen der Feuerwehr?", o: {a: "Bürgerliches Gesetzbuch", b: "Feuerwehrgesetz Baden-Württemberg", c: "Feuerwehrsatzung der Gemeinde", d: "Landesverfassung Baden-Württemberg"}, a: ["b", "c"] },
@@ -479,7 +478,6 @@
                 <h3>Ergebnis: ${currentPart === 'exam' ? 'Prüfung' : 'Teil ' + currentPart}</h3>
                 <p>Richtig: ${score} | Falsch: ${total - score}</p>
                 <div style="font-size: 3em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'}; margin: 15px 0;">${percent}%</div>
-                <button onclick="showGlobalLeaderboard()">Bestenliste</button>
                 <button style="background:#666; margin-top:10px;" onclick="location.reload()">Hauptmenü</button>
             </div>
         `;
@@ -531,7 +529,8 @@
                     const examBest = e.exam || 0;
                     const examLast = e.lasts && e.lasts.exam !== undefined ? e.lasts.exam : '-';
                     const examCount = (e.counts && e.counts.exam) ? e.counts.exam : 0;
-                    html += `<span class="score-info" style="color:#e67e22; font-weight:bold;">Prüfung: Best: ${examBest}% | Letzte: ${examLast}% (${examCount}x)</span>`;
+                    const examDate = (e.dates && e.dates.exam) ? e.dates.exam : '-';
+                    html += `<span class="score-info" style="color:#e67e22; font-weight:bold;">Prüfung: Best: ${examBest}% | Letzte: ${examLast}% (${examCount}x, am ${examDate})</span>`;
                     html += `<span class="score-bold">Gesamt-Schnitt: ${e.total || 0}%</span></div>`;
                 });
                 html += `</div>`;
