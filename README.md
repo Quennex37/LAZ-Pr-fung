@@ -399,6 +399,15 @@
         ]
     };
 
+    function getDeviceId() {
+        let id = localStorage.getItem('quiz_device_id');
+        if (!id) {
+            id = 'dev-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('quiz_device_id', id);
+        }
+        return id;
+    }
+
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
@@ -428,7 +437,16 @@
         const input = document.getElementById("user-name");
         const val = input.value.trim();
         if(!val) { alert("Bitte Namen eingeben!"); return; }
+        
+        const oldName = localStorage.getItem("quiz_user_name");
         localStorage.setItem("quiz_user_name", val);
+        const devId = getDeviceId();
+
+        // Bestehende Daten unter diesem Gerät in Firebase aktualisieren
+        ['mannschaft', 'maschinist', 'gruppenfuehrer'].forEach(cat => {
+            database.ref(`leaderboard/${devId}/${cat}`).update({ name: val });
+        });
+
         input.readOnly = true;
         input.style.background = "#eee";
         document.getElementById("edit-btn").innerText = "Namen ändern";
@@ -520,11 +538,11 @@
 
         document.getElementById("quiz-box").innerHTML = `<div style="text-align:center;"><h3>Ergebnis</h3><div style="font-size: 3em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'};">${percent}%</div><button onclick="location.reload()">Hauptmenü</button></div>`;
 
-        const nameId = currentPlayer.toLowerCase().replace(/\s+/g, '');
-        const userRef = database.ref(`leaderboard/${nameId}/${currentCategory}`);
+        const devId = getDeviceId();
+        const userRef = database.ref(`leaderboard/${devId}/${currentCategory}`);
         
         userRef.once('value', (snapshot) => {
-            let data = snapshot.val() || { name: currentPlayer, room: activePw };
+            let data = snapshot.val() || { name: currentPlayer, room: activePw, devId: devId };
             data.name = currentPlayer;
             data.room = activePw;
             if(!data.counts) data.counts = {t1:0, t2:0, t3:0, exam:0};
@@ -543,7 +561,7 @@
         });
     }
 
-        function showGlobalLeaderboard() {
+    function showGlobalLeaderboard() {
         const activePw = localStorage.getItem('active_pw');
         document.getElementById("login-area").style.display = "none";
         document.getElementById("leaderboard-view").style.display = "block";
@@ -552,14 +570,14 @@
             const rawData = snapshot.val();
             let html = "";
             
-            // Hilfsfunktion um deutsches Datum "DD.MM.YYYY, HH:MM" in ein vergleichbares Objekt zu wandeln
             const parseDate = (str) => {
-                if(!str || str === '-') return 0;
-                const [d, t] = str.split(', ');
-                const [day, month] = d.split('.');
-                const [hour, min] = t.split(':');
-                // Jahr wird auf 2026 gesetzt (wie im System), wichtig ist der relative Vergleich
-                return new Date(2026, month - 1, day, hour, min).getTime();
+                if(!str || str === '-' || str === '') return 0;
+                try {
+                    const parts = str.split(', ');
+                    const [day, month] = parts[0].split('.');
+                    const [hour, min] = parts[1].split(':');
+                    return new Date(2026, month - 1, day, hour, min).getTime();
+                } catch(e) { return 0; }
             };
 
             ['mannschaft', 'maschinist', 'gruppenfuehrer'].forEach(cat => {
@@ -569,23 +587,19 @@
                 for (let id in rawData) {
                     const entry = rawData[id][cat];
                     if (entry && entry.room === activePw) {
+                        // Wir mergen hier zusätzlich nach Namen, falls jemand auf 2 Geräten den gleichen Namen nutzt
                         const nameKey = entry.name.toLowerCase().trim();
                         if (!mergedEntries[nameKey]) {
                             mergedEntries[nameKey] = JSON.parse(JSON.stringify(entry));
                         } else {
                             const me = mergedEntries[nameKey];
                             ['t1', 't2', 't3', 'exam'].forEach(k => {
-                                // 1. Bestwert bleibt das Maximum
                                 me[k] = Math.max(me[k] || 0, entry[k] || 0);
-                                
-                                // 2. Versuche werden addiert
                                 if(!me.counts) me.counts = {t1:0, t2:0, t3:0, exam:0};
                                 me.counts[k] = (me.counts[k] || 0) + (entry.counts ? (entry.counts[k] || 0) : 0);
                                 
-                                // 3. NEU: Datum und "Letzter Wert" nur nehmen, wenn der neue Eintrag NEUER ist
                                 const existingDateVal = parseDate(me.dates ? me.dates[k] : '-');
                                 const newDateVal = parseDate(entry.dates ? entry.dates[k] : '-');
-
                                 if (newDateVal > existingDateVal) {
                                     if(!me.dates) me.dates = {};
                                     if(!me.lasts) me.lasts = {};
@@ -622,7 +636,6 @@
             document.getElementById("leaderboard-list").innerHTML = html;
         });
     }
-
 
     function backToMenu() { document.getElementById("leaderboard-view").style.display = "none"; document.getElementById("login-area").style.display = "block"; }
     function confirmAbort() { if (confirm("Quiz abbrechen?")) location.reload(); }
