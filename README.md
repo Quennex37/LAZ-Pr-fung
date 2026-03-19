@@ -42,11 +42,31 @@
             padding: 15px; 
             border-radius: 15px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            position: relative;
+            padding-top: 50px;
         }
         
-        h2 { color: #d32f2f; margin-top: 0; text-align: center; font-size: 1.4em; }
+        .dark-mode-toggle { 
+            width: auto; 
+            padding: 6px 12px; 
+            font-size: 0.75em; 
+            background: #555; 
+            position: absolute; 
+            right: 15px; 
+            top: 10px; 
+            border-radius: 20px; 
+            z-index: 10;
+            color: white;
+            border: none;
+        }
+
+        h2 { color: #d32f2f; margin-top: 10px; text-align: center; font-size: 1.4em; }
+
+        .name-section { margin: 15px 0 25px 0; text-align: center; }
+        #user-name { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; background: #eee; text-align: center; }
+        .name-edit-btn { background: #666; font-size: 0.85em; padding: 10px 20px; width: auto; margin-top: 10px; display: inline-block; color: white; border-radius: 8px; border: none; font-weight: bold; }
+
         .progress { font-size: 0.85em; color: #777; margin-bottom: 10px; font-weight: bold; text-align: center; }
-        
         .question-text { font-weight: bold; margin-bottom: 15px; display: block; font-size: 1.1em; line-height: 1.3; }
         
         .option { 
@@ -59,8 +79,6 @@
             position: relative; 
             border: 1px solid var(--border-color); 
             min-height: 50px; 
-            font-size: 0.95em; 
-            word-wrap: break-word;
         }
         
         .option input { position: absolute; left: 12px; top: 14px; width: 22px; height: 22px; }
@@ -69,7 +87,6 @@
         
         .part-row-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
         .part-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        
         .menu-btn { background: var(--btn-secondary); font-size: 0.85em; padding: 12px 2px; }
         .exam-btn { background: #e67e22 !important; margin-top: 2px; margin-bottom: 12px; }
         
@@ -84,24 +101,27 @@
         
         .cat-label { font-weight: bold; margin-top: 12px; display: block; color: #d32f2f; font-size: 0.85em; text-transform: uppercase; }
         .hidden { display: none !important; }
-        .logout-btn { background: transparent; color: #888; font-size: 0.8em; text-decoration: underline; margin-top: 20px; padding: 5px; }
-        .dark-mode-toggle { width: auto; padding: 6px 12px; font-size: 0.75em; background: #555; position: absolute; right: 15px; top: 15px; border-radius: 20px; }
+        .logout-btn { background: transparent; color: #888; font-size: 0.8em; text-decoration: underline; margin-top: 20px; padding: 5px; border: none; cursor: pointer; width: auto; }
     </style>
 </head>
 <body>
 
-<div class="container" style="position: relative;">
+<div class="container">
     <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌓 Design</button>
 
     <div id="password-area">
-        <h2 style="margin-top: 25px;">Feuerwehr Zugang</h2>
+        <h2>Feuerwehr Zugang</h2>
         <input type="password" id="pw-input" placeholder="Passwort..." style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size: 16px;">
         <button onclick="checkPassword()">Anmelden</button>
     </div>
 
     <div id="login-area" class="hidden">
-        <h2 id="portal-title" style="margin-top: 25px;">Hauptmenü</h2>
-        <input type="text" id="user-name" placeholder="Dein Vorname..." style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size: 16px;">
+        <h2 id="portal-title">Hauptmenü</h2>
+        
+        <div class="name-section">
+            <input type="text" id="user-name" placeholder="Dein Vorname..." readonly>
+            <button class="name-edit-btn" id="edit-btn" onclick="enableNameChange()">Namen ändern</button>
+        </div>
         
         <div id="menu">
             <span class="cat-label">Mannschaft (90 Fragen)</span>
@@ -128,7 +148,7 @@
 
             <hr style="border:0; border-top:1px solid #ddd; margin: 20px 0;">
             <button style="background: #2c3e50;" onclick="showGlobalLeaderboard()">🏆 Bestenliste ansehen</button>
-            <button class="logout-btn" onclick="logout()">Abmelden & Passwort-Login</button>
+            <center><button class="logout-btn" onclick="logout()">Abmelden & Passwort-Login</button></center>
         </div>
     </div>
 
@@ -379,16 +399,41 @@
         ]
     };
 
-    let deviceID = localStorage.getItem("quiz_device_id") || 'dev_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("quiz_device_id", deviceID);
-
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     }
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
 
-    window.onload = () => { if(localStorage.getItem('active_pw')) applyAccess(localStorage.getItem('active_pw')); };
+    window.onload = () => { 
+        if(localStorage.getItem('active_pw')) applyAccess(localStorage.getItem('active_pw')); 
+        const savedName = localStorage.getItem("quiz_user_name");
+        if(savedName) {
+            document.getElementById("user-name").value = savedName;
+        } else {
+            enableNameChange();
+        }
+    };
+
+    function enableNameChange() {
+        const input = document.getElementById("user-name");
+        input.readOnly = false;
+        input.style.background = "#fff";
+        input.focus();
+        document.getElementById("edit-btn").innerText = "Name speichern";
+        document.getElementById("edit-btn").onclick = saveName;
+    }
+
+    function saveName() {
+        const input = document.getElementById("user-name");
+        const val = input.value.trim();
+        if(!val) { alert("Bitte Namen eingeben!"); return; }
+        localStorage.setItem("quiz_user_name", val);
+        input.readOnly = true;
+        input.style.background = "#eee";
+        document.getElementById("edit-btn").innerText = "Namen ändern";
+        document.getElementById("edit-btn").onclick = enableNameChange;
+    }
 
     function checkPassword() {
         const input = document.getElementById('pw-input').value;
@@ -401,7 +446,7 @@
     function applyAccess(pw) {
         document.getElementById('password-area').classList.add('hidden');
         document.getElementById('login-area').classList.remove('hidden');
-        document.getElementById('portal-title').innerText = "Feuerwehr " + (pw === PW_HEDDESHEIM ? "Heddesheim" : "Schriesheim") + " - Hauptmenü";
+        document.getElementById('portal-title').innerText = "Feuerwehr " + (pw === PW_HEDDESHEIM ? "Heddesheim" : "Schriesheim");
     }
 
     function logout() {
@@ -416,6 +461,7 @@
     function preStart(key, part) {
         const nameInput = document.getElementById("user-name").value.trim();
         if (!nameInput) { alert("Bitte gib deinen Namen ein!"); return; }
+        localStorage.setItem("quiz_user_name", nameInput);
         currentPlayer = nameInput;
         currentCategory = key;
         currentPart = part;
@@ -472,19 +518,15 @@
         const datum = new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
         const activePw = localStorage.getItem('active_pw');
 
-        document.getElementById("progress").style.display = "none";
-        document.getElementById("quiz-box").innerHTML = `
-            <div style="text-align:center;">
-                <h3>Ergebnis: ${currentPart === 'exam' ? 'Prüfung' : 'Teil ' + currentPart}</h3>
-                <p>Richtig: ${score} | Falsch: ${total - score}</p>
-                <div style="font-size: 3em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'}; margin: 15px 0;">${percent}%</div>
-                <button style="background:#666; margin-top:10px;" onclick="location.reload()">Hauptmenü</button>
-            </div>
-        `;
+        document.getElementById("quiz-box").innerHTML = `<div style="text-align:center;"><h3>Ergebnis</h3><div style="font-size: 3em; font-weight: bold; color: ${percent >= 50 ? '#28a745' : '#d32f2f'};">${percent}%</div><button onclick="location.reload()">Hauptmenü</button></div>`;
 
-        const userRef = database.ref(`leaderboard/${deviceID}/${currentCategory}`);
+        const nameId = currentPlayer.toLowerCase().replace(/\s+/g, '');
+        const userRef = database.ref(`leaderboard/${nameId}/${currentCategory}`);
+        
         userRef.once('value', (snapshot) => {
             let data = snapshot.val() || { name: currentPlayer, room: activePw };
+            data.name = currentPlayer;
+            data.room = activePw;
             if(!data.counts) data.counts = {t1:0, t2:0, t3:0, exam:0};
             if(!data.dates) data.dates = {t1:'', t2:'', t3:'', exam:''};
             if(!data.lasts) data.lasts = {t1:0, t2:0, t3:0, exam:0}; 
@@ -501,36 +543,78 @@
         });
     }
 
-    function showGlobalLeaderboard() {
+        function showGlobalLeaderboard() {
         const activePw = localStorage.getItem('active_pw');
         document.getElementById("login-area").style.display = "none";
-        document.getElementById("quiz-area").style.display = "none";
         document.getElementById("leaderboard-view").style.display = "block";
         
         database.ref('leaderboard').once('value', (snapshot) => {
-            const allData = snapshot.val();
+            const rawData = snapshot.val();
             let html = "";
+            
+            // Hilfsfunktion um deutsches Datum "DD.MM.YYYY, HH:MM" in ein vergleichbares Objekt zu wandeln
+            const parseDate = (str) => {
+                if(!str || str === '-') return 0;
+                const [d, t] = str.split(', ');
+                const [day, month] = d.split('.');
+                const [hour, min] = t.split(':');
+                // Jahr wird auf 2026 gesetzt (wie im System), wichtig ist der relative Vergleich
+                return new Date(2026, month - 1, day, hour, min).getTime();
+            };
+
             ['mannschaft', 'maschinist', 'gruppenfuehrer'].forEach(cat => {
                 html += `<div class="leaderboard"><h3>🚒 ${cat.toUpperCase()}</h3>`;
-                let entries = [];
-                for (let id in allData) { 
-                    if (allData[id][cat] && allData[id][cat].room === activePw) entries.push(allData[id][cat]);
+                let mergedEntries = {};
+
+                for (let id in rawData) {
+                    const entry = rawData[id][cat];
+                    if (entry && entry.room === activePw) {
+                        const nameKey = entry.name.toLowerCase().trim();
+                        if (!mergedEntries[nameKey]) {
+                            mergedEntries[nameKey] = JSON.parse(JSON.stringify(entry));
+                        } else {
+                            const me = mergedEntries[nameKey];
+                            ['t1', 't2', 't3', 'exam'].forEach(k => {
+                                // 1. Bestwert bleibt das Maximum
+                                me[k] = Math.max(me[k] || 0, entry[k] || 0);
+                                
+                                // 2. Versuche werden addiert
+                                if(!me.counts) me.counts = {t1:0, t2:0, t3:0, exam:0};
+                                me.counts[k] = (me.counts[k] || 0) + (entry.counts ? (entry.counts[k] || 0) : 0);
+                                
+                                // 3. NEU: Datum und "Letzter Wert" nur nehmen, wenn der neue Eintrag NEUER ist
+                                const existingDateVal = parseDate(me.dates ? me.dates[k] : '-');
+                                const newDateVal = parseDate(entry.dates ? entry.dates[k] : '-');
+
+                                if (newDateVal > existingDateVal) {
+                                    if(!me.dates) me.dates = {};
+                                    if(!me.lasts) me.lasts = {};
+                                    me.dates[k] = entry.dates[k];
+                                    me.lasts[k] = entry.lasts[k];
+                                }
+                            });
+                            const div = (cat === 'mannschaft') ? 3 : 2;
+                            me.total = Math.round(((me.t1 || 0) + (me.t2 || 0) + (me.t3 || 0)) / div);
+                        }
+                    }
                 }
-                entries.sort((a, b) => b.total - a.total).forEach((e, i) => {
+
+                Object.values(mergedEntries).sort((a, b) => b.total - a.total).forEach((e, i) => {
                     html += `<div class="entry"><b>${i+1}. ${e.name}</b><br>`;
                     [1, 2, 3].forEach(p => {
                         if(cat !== 'mannschaft' && p === 3) return;
-                        const s = e['t'+p] || 0;
-                        const last = (e.lasts && e.lasts['t'+p] !== undefined) ? e.lasts['t'+p] : '-';
-                        const c = (e.counts && e.counts['t'+p]) ? e.counts['t'+p] : 0;
-                        const d = (e.dates && e.dates['t'+p]) ? e.dates['t'+p] : '-';
-                        html += `<span class="score-info">Teil ${p}: 🏆 ${s}% | Letztes: ${last}% | Versuche: ${c} (am ${d})</span>`;
+                        const key = 't' + p;
+                        const best = e[key] || 0;
+                        const last = (e.lasts && e.lasts[key] !== undefined) ? e.lasts[key] : '-';
+                        const count = (e.counts && e.counts[key]) ? e.counts[key] : 0;
+                        const date = (e.dates && e.dates[key]) ? e.dates[key] : '-';
+                        html += `<span class="score-info">Teil ${p}: 🏆 ${best}% | Letztes: ${last}% | Versuche: ${count} (${date})</span>`;
                     });
-                    const examBest = e.exam || 0;
-                    const examLast = e.lasts && e.lasts.exam !== undefined ? e.lasts.exam : '-';
-                    const examCount = (e.counts && e.counts.exam) ? e.counts.exam : 0;
-                    const examDate = (e.dates && e.dates.exam) ? e.dates.exam : '-';
-                    html += `<span class="score-info" style="color:#e67e22; font-weight:bold;">Prüfung: Best: ${examBest}% | Letzte: ${examLast}% (${examCount}x, am ${examDate})</span>`;
+                    const exBest = e.exam || 0;
+                    const exLast = (e.lasts && e.lasts.exam !== undefined) ? e.lasts.exam : '-';
+                    const exCount = (e.counts && e.counts.exam) ? e.counts.exam : 0;
+                    const exDate = (e.dates && e.dates.exam) ? e.dates.exam : '-';
+                    html += `<span class="score-info" style="color:#e67e22; font-weight:bold;">Prüfung: Best: ${exBest}% | Letzte: ${exLast}% (${exCount}x, ${exDate})</span>`;
                     html += `<span class="score-bold">Gesamt-Schnitt: ${e.total || 0}%</span></div>`;
                 });
                 html += `</div>`;
@@ -538,6 +622,7 @@
             document.getElementById("leaderboard-list").innerHTML = html;
         });
     }
+
 
     function backToMenu() { document.getElementById("leaderboard-view").style.display = "none"; document.getElementById("login-area").style.display = "block"; }
     function confirmAbort() { if (confirm("Quiz abbrechen?")) location.reload(); }
